@@ -764,7 +764,8 @@ GitVersion.SemanticVersion.BuildMetaData -> GitVersion.SemanticVersionBuildMetaD
 GitVersion.SemanticVersion.CompareTo(GitVersion.SemanticVersion? value) -> int
 GitVersion.SemanticVersion.CompareTo(GitVersion.SemanticVersion? value, bool includePrerelease) -> int
 GitVersion.SemanticVersion.Equals(GitVersion.SemanticVersion? obj) -> bool
-GitVersion.SemanticVersion.IncrementVersion(GitVersion.VersionField incrementStrategy, string? label) -> GitVersion.SemanticVersion!
+GitVersion.SemanticVersion.IncrementVersion(bool isContinuousDeployment, string? label, params GitVersion.VersionField[]! incrementStrategy) -> GitVersion.SemanticVersion!
+GitVersion.SemanticVersion.IncrementVersion(string? label, params GitVersion.VersionField[]! incrementStrategy) -> GitVersion.SemanticVersion!
 GitVersion.SemanticVersion.IsEmpty() -> bool
 GitVersion.SemanticVersion.IsLabeledWith(string! value) -> bool
 GitVersion.SemanticVersion.IsMatchForBranchSpecificLabel(string? value) -> bool
@@ -890,12 +891,12 @@ GitVersion.VersionCalculation.EffectiveBranchConfigurationFinder.EffectiveBranch
 GitVersion.VersionCalculation.IEffectiveBranchConfigurationFinder
 GitVersion.VersionCalculation.IEffectiveBranchConfigurationFinder.GetConfigurations(GitVersion.IBranch! branch, GitVersion.Configuration.IGitVersionConfiguration! configuration) -> System.Collections.Generic.IEnumerable<GitVersion.Configuration.EffectiveBranchConfiguration!>!
 GitVersion.VersionCalculation.IIncrementStrategyFinder
-GitVersion.VersionCalculation.IIncrementStrategyFinder.DetermineIncrementedField(GitVersion.ICommit? currentCommit, GitVersion.VersionCalculation.BaseVersion! baseVersion, GitVersion.Configuration.EffectiveConfiguration! configuration) -> GitVersion.VersionField
+GitVersion.VersionCalculation.IIncrementStrategyFinder.DetermineIncrementedFields(GitVersion.ICommit? currentCommit, GitVersion.VersionCalculation.BaseVersion! baseVersion, GitVersion.Configuration.EffectiveConfiguration! configuration) -> GitVersion.VersionField[]!
 GitVersion.VersionCalculation.IIncrementStrategyFinder.GetIncrementForCommits(string? majorVersionBumpMessage, string? minorVersionBumpMessage, string? patchVersionBumpMessage, string? noBumpMessage, System.Collections.Generic.IEnumerable<GitVersion.ICommit!>! commits) -> GitVersion.VersionField?
 GitVersion.VersionCalculation.IMainlineVersionCalculator
 GitVersion.VersionCalculation.IMainlineVersionCalculator.CreateVersionBuildMetaData(GitVersion.ICommit? baseVersionSource) -> GitVersion.SemanticVersionBuildMetaData!
 GitVersion.VersionCalculation.IMainlineVersionCalculator.FindMainlineModeVersion(GitVersion.VersionCalculation.NextVersion! nextVersion) -> GitVersion.SemanticVersion!
-GitVersion.VersionCalculation.IncrementStrategyFinder.DetermineIncrementedField(GitVersion.ICommit? currentCommit, GitVersion.VersionCalculation.BaseVersion! baseVersion, GitVersion.Configuration.EffectiveConfiguration! configuration) -> GitVersion.VersionField
+GitVersion.VersionCalculation.IncrementStrategyFinder.DetermineIncrementedFields(GitVersion.ICommit? currentCommit, GitVersion.VersionCalculation.BaseVersion! baseVersion, GitVersion.Configuration.EffectiveConfiguration! configuration) -> GitVersion.VersionField[]!
 GitVersion.VersionCalculation.IncrementStrategyFinder.GetIncrementForCommits(string? majorVersionBumpMessage, string? minorVersionBumpMessage, string? patchVersionBumpMessage, string? noBumpMessage, System.Collections.Generic.IEnumerable<GitVersion.ICommit!>! commits) -> GitVersion.VersionField?
 GitVersion.VersionCalculation.INextVersionCalculator
 GitVersion.VersionCalculation.INextVersionCalculator.FindVersion() -> GitVersion.VersionCalculation.NextVersion!

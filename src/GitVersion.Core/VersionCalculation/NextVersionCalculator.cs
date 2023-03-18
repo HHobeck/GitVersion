@@ -255,12 +255,14 @@ public class NextVersionCalculator : INextVersionCalculator
 
     private SemanticVersion GetIncrementedVersion(EffectiveBranchConfiguration configuration, BaseVersion baseVersion, string? label)
     {
-        var incrementStrategy = incrementStrategyFinder.DetermineIncrementedField(
+        var incrementStrategy = incrementStrategyFinder.DetermineIncrementedFields(
             currentCommit: Context.CurrentCommit,
             baseVersion: baseVersion,
             configuration: configuration.Value
         );
-        return baseVersion.SemanticVersion.IncrementVersion(incrementStrategy, label);
+
+        bool isContinuousDeployment = configuration.Value.VersioningMode == VersioningMode.ContinuousDeployment;
+        return baseVersion.SemanticVersion.IncrementVersion(isContinuousDeployment, label, incrementStrategy);
     }
 
     private bool IncludeVersion(BaseVersion baseVersion, IIgnoreConfiguration ignoreConfiguration)

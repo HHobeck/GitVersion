@@ -303,30 +303,33 @@ public class SemanticVersion : IFormattable, IComparable<SemanticVersion>, IEqua
         }
     }
 
-    public SemanticVersion IncrementVersion(VersionField incrementStrategy, string? label)
+    public SemanticVersion IncrementVersion(string? label, params VersionField[] incrementStrategy)
     {
         var incremented = new SemanticVersion(this);
 
-        if (!incremented.PreReleaseTag.HasTag())
+        foreach (var item in incrementStrategy)
         {
-            switch (incrementStrategy)
+            if (!incremented.PreReleaseTag.HasTag())
             {
-                case VersionField.None:
-                    break;
-                case VersionField.Major:
-                    incremented.Major++;
-                    incremented.Minor = 0;
-                    incremented.Patch = 0;
-                    break;
-                case VersionField.Minor:
-                    incremented.Minor++;
-                    incremented.Patch = 0;
-                    break;
-                case VersionField.Patch:
-                    incremented.Patch++;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(incrementStrategy));
+                switch (item)
+                {
+                    case VersionField.None:
+                        break;
+                    case VersionField.Major:
+                        incremented.Major++;
+                        incremented.Minor = 0;
+                        incremented.Patch = 0;
+                        break;
+                    case VersionField.Minor:
+                        incremented.Minor++;
+                        incremented.Patch = 0;
+                        break;
+                    case VersionField.Patch:
+                        incremented.Patch++;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(incrementStrategy));
+                }
             }
         }
 
@@ -338,6 +341,49 @@ public class SemanticVersion : IFormattable, IComparable<SemanticVersion>, IEqua
         if (!PreReleaseTag.HasTag() && !label.IsNullOrEmpty())
         {
             incremented.PreReleaseTag = new SemanticVersionPreReleaseTag(label, 1);
+        }
+
+        return incremented;
+    }
+
+    public SemanticVersion IncrementVersion(bool isContinuousDeployment, string? label, params VersionField[] incrementStrategy)
+    {
+        var incremented = new SemanticVersion(this);
+
+        foreach (var item in incrementStrategy)
+        {
+            if (!incremented.PreReleaseTag.HasTag())
+            {
+                switch (item)
+                {
+                    case VersionField.None:
+                        break;
+                    case VersionField.Major:
+                        incremented.Major++;
+                        incremented.Minor = 0;
+                        incremented.Patch = 0;
+                        break;
+                    case VersionField.Minor:
+                        incremented.Minor++;
+                        incremented.Patch = 0;
+                        break;
+                    case VersionField.Patch:
+                        incremented.Patch++;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(incrementStrategy));
+                }
+            }
+        }
+
+        if (incremented.PreReleaseTag.HasTag() && incremented.PreReleaseTag.Number != null)
+        {
+            incremented.PreReleaseTag.Number++;
+        }
+
+        if (!PreReleaseTag.HasTag() && !label.IsNullOrEmpty())
+        {
+            incremented.PreReleaseTag = new(label, isContinuousDeployment ? 1 : 1);
         }
 
         return incremented;

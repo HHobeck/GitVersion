@@ -78,7 +78,7 @@ internal class MainlineVersionCalculator : IMainlineVersionCalculator
                 var branchIncrement = FindMessageIncrement(null, Context.CurrentCommit, mergeBase, mainlineCommitLog);
                 this.log.Info($"Performing {branchIncrement} increment for current branch ");
 
-                mainlineVersion = mainlineVersion.IncrementVersion(branchIncrement, null);
+                mainlineVersion = mainlineVersion.IncrementVersion(null, branchIncrement);
             }
 
             return new SemanticVersion(mainlineVersion)
@@ -133,7 +133,7 @@ internal class MainlineVersionCalculator : IMainlineVersionCalculator
         directCommits.Clear();
 
         // Finally increment for the branch
-        mainlineVersion = mainlineVersion.IncrementVersion(findMessageIncrement, null);
+        mainlineVersion = mainlineVersion.IncrementVersion(null, findMessageIncrement);
         this.log.Info($"Merge commit {mergeCommit} incremented base versions {findMessageIncrement}, now {mainlineVersion}");
         return mainlineVersion;
     }
@@ -288,7 +288,7 @@ internal class MainlineVersionCalculator : IMainlineVersionCalculator
                 noBumpMessage: Context.Configuration.NoBumpMessage,
                 commits: new[] { directCommit }
             ) ?? FindDefaultIncrementForBranch(Context, mainline);
-            mainlineVersion = mainlineVersion.IncrementVersion(directCommitIncrement, null);
+            mainlineVersion = mainlineVersion.IncrementVersion(null, directCommitIncrement);
             this.log.Info($"Direct commit on main {directCommit} incremented base versions {directCommitIncrement}, now {mainlineVersion}");
         }
 

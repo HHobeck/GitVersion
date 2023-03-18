@@ -1,12 +1,87 @@
 using GitVersion.Configuration;
 using GitVersion.Core.Tests.Helpers;
+using GitVersion.VersionCalculation;
 using LibGit2Sharp;
 
 namespace GitVersion.Core.Tests.IntegrationTests;
 
+public class XenoLibPackages : TestBase
+{
+    private GitVersionConfiguration GetConfiguration()
+    {
+        var configuration = GitFlowConfigurationBuilder.New
+            .WithBranch("feature", _ => _
+                .WithVersioningMode(VersioningMode.ContinuousDeployment)
+                .WithIncrement(IncrementStrategy.Minor)
+            ).WithBranch("pull-request", _ => _
+                .WithIncrement(IncrementStrategy.None)
+                .WithRegularExpression(@"^(pull|pull\-requests|pr)[/-]")
+                .WithTrackMergeTarget(true)
+            ).Build();
+        return configuration;
+    }
+
+    [Test, Ignore("")]
+    public void IncrementFeatureByMinor()
+    {
+        var configuration = GetConfiguration();
+
+        using var fixture = new EmptyRepositoryFixture("main");
+
+        fixture.MakeATaggedCommit("0.1.0");
+        fixture.BranchTo("feature/foo", "foo");
+        fixture.MakeACommit();
+        fixture.AssertFullSemver("0.2.0-foo.1", configuration);
+        fixture.MakeACommit();
+        fixture.AssertFullSemver("0.2.0-foo.2", configuration);
+        fixture.Checkout("main");
+        fixture.MergeNoFF("feature/foo");
+        fixture.AssertFullSemver("0.2.0", configuration); // 0.1.1+3
+    }
+
+    [Test, Ignore("")]
+    public void CanCalculatePullRequestChanges()
+    {
+        var configuration = GetConfiguration();
+
+        using var fixture = new EmptyRepositoryFixture();
+
+        fixture.MakeATaggedCommit("0.1.0");
+        fixture.CreateBranch("feature/foo");
+        fixture.MakeACommit();
+        fixture.AssertFullSemver("0.2.0-foo.1", configuration);
+        fixture.Repository.CreatePullRequestRef("feature/foo", MainBranch, normalise: true);
+
+        fixture.AssertFullSemver("0.2.0-PullRequest0002.2"); // 0.1.1-PullRequest2.2
+    }
+}
+
 [TestFixture]
 public class OtherBranchScenarios : TestBase
 {
+    [Test]
+    public void VerifyManuallyIncrementingVersion()
+    {
+        var configuration = GitFlowConfigurationBuilder.New
+            .WithBranch("develop", _ => _
+                .WithCommitMessageIncrementing(CommitMessageIncrementMode.Enabled)
+                .WithVersioningMode(VersioningMode.ContinuousDelivery)
+            ).Build();
+
+        using var fixture = new EmptyRepositoryFixture();
+
+        fixture.MakeACommit("1");
+
+        fixture.BranchTo("develop");
+        fixture.MakeACommit("+semver: fix");
+
+        fixture.AssertFullSemver("0.1.1-alpha.1+2", configuration);
+
+        fixture.MakeACommit("+semver: fix");
+
+        fixture.AssertFullSemver("0.1.2-alpha.1+3", configuration);
+    }
+
     [Test]
     public void CanTakeVersionFromReleaseBranch()
     {

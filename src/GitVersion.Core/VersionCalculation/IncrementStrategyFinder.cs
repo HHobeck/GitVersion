@@ -26,29 +26,62 @@ public class IncrementStrategyFinder : IIncrementStrategyFinder
 
     public IncrementStrategyFinder(IGitRepository repository) => this.repository = repository.NotNull();
 
-    public VersionField DetermineIncrementedField(ICommit? currentCommit, BaseVersion baseVersion, EffectiveConfiguration configuration)
+    public VersionField[] DetermineIncrementedFields(
+        ICommit? currentCommit, BaseVersion baseVersion, EffectiveConfiguration configuration)
     {
         baseVersion.NotNull();
         configuration.NotNull();
 
-        var commitMessageIncrement = FindCommitMessageIncrement(configuration, baseVersion.BaseVersionSource, currentCommit);
+        return DetermineIncrementedFieldsInternal(currentCommit, baseVersion, configuration).ToArray();
+    }
+
+    private IEnumerable<VersionField> DetermineIncrementedFieldsInternal(
+        ICommit? currentCommit, BaseVersion baseVersion, EffectiveConfiguration configuration)
+    {
+        var commitMessageIncrements = FindCommitMessageIncrements(
+            configuration, baseVersion.BaseVersionSource, currentCommit
+        ).ToArray();
 
         var defaultIncrement = configuration.Increment.ToVersionField();
 
         // use the default branch configuration increment strategy if there are no commit message overrides
-        if (commitMessageIncrement == null)
+        if (commitMessageIncrements.Length == 0)
         {
-            return baseVersion.ShouldIncrement ? defaultIncrement : VersionField.None;
+            yield return baseVersion.ShouldIncrement ? defaultIncrement : VersionField.None;
+            yield break;
         }
 
-        // don't increment for less than the branch configuration increment, if the absence of commit messages would have
-        // still resulted in an increment of configuration.Increment
-        if (baseVersion.ShouldIncrement && commitMessageIncrement < defaultIncrement)
+        if (baseVersion.ShouldIncrement && defaultIncrement != VersionField.None)
         {
-            return defaultIncrement;
+            yield return defaultIncrement;
         }
 
-        return commitMessageIncrement.Value;
+        // var maximalIncrement = baseVersion.ShouldIncrement ? defaultIncrement : VersionField.Major;
+        foreach (var commitMessageIncrement in commitMessageIncrements)
+        {
+            // don't increment for less than the branch configuration increment, if the absence of commit messages would have
+            // still resulted in an increment of configuration.Increment
+            //if (commitMessageIncrement <= maximalIncrement)
+            {
+                yield return commitMessageIncrement;
+            }
+        }
+    }
+
+    private IEnumerable<VersionField> GetIncrementForCommitsInternal(
+        string? majorVersionBumpMessage, string? minorVersionBumpMessage,
+        string? patchVersionBumpMessage, string? noBumpMessage, IEnumerable<ICommit> commits)
+    {
+        commits.NotNull();
+
+        var majorRegex = TryGetRegexOrDefault(majorVersionBumpMessage, DefaultMajorPatternRegex);
+        var minorRegex = TryGetRegexOrDefault(minorVersionBumpMessage, DefaultMinorPatternRegex);
+        var patchRegex = TryGetRegexOrDefault(patchVersionBumpMessage, DefaultPatchPatternRegex);
+        var none = TryGetRegexOrDefault(noBumpMessage, DefaultNoBumpPatternRegex);
+
+        return commits
+            .Select(c => GetIncrementFromCommit(c, majorRegex, minorRegex, patchRegex, none))
+            .Where(v => v != null).Select(el => el!.Value);
     }
 
     public VersionField? GetIncrementForCommits(string? majorVersionBumpMessage, string? minorVersionBumpMessage,
@@ -71,11 +104,12 @@ public class IncrementStrategyFinder : IIncrementStrategyFinder
             : null;
     }
 
-    private VersionField? FindCommitMessageIncrement(EffectiveConfiguration configuration, ICommit? baseCommit, ICommit? currentCommit)
+    private IEnumerable<VersionField> FindCommitMessageIncrements(
+        EffectiveConfiguration configuration, ICommit? baseCommit, ICommit? currentCommit)
     {
         if (configuration.CommitMessageIncrementing == CommitMessageIncrementMode.Disabled)
         {
-            return null;
+            return Enumerable.Empty<VersionField>();
         }
 
         var commits = GetIntermediateCommits(baseCommit, currentCommit);
@@ -92,7 +126,7 @@ public class IncrementStrategyFinder : IIncrementStrategyFinder
             commits = commits.Where(c => c.Parents.Count() > 1);
         }
 
-        return GetIncrementForCommits(
+        return GetIncrementForCommitsInternal(
             majorVersionBumpMessage: configuration.MajorVersionBumpMessage,
             minorVersionBumpMessage: configuration.MinorVersionBumpMessage,
             patchVersionBumpMessage: configuration.PatchVersionBumpMessage,
