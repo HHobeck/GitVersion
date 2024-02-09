@@ -12,7 +12,8 @@ internal class NextVersionCalculator(
     IEnumerable<IVersionModeCalculator> versionModeCalculators,
     IEnumerable<IVersionStrategy> versionStrategies,
     IEffectiveBranchConfigurationFinder effectiveBranchConfigurationFinder,
-    IIncrementStrategyFinder incrementStrategyFinder)
+    IIncrementStrategyFinder incrementStrategyFinder,
+    IGitRepository gitRepository)
     : INextVersionCalculator
 {
     private readonly ILog log = log.NotNull();
@@ -20,6 +21,7 @@ internal class NextVersionCalculator(
     private readonly IVersionStrategy[] versionStrategies = versionStrategies.NotNull().ToArray();
     private readonly IEffectiveBranchConfigurationFinder effectiveBranchConfigurationFinder = effectiveBranchConfigurationFinder.NotNull();
     private readonly IIncrementStrategyFinder incrementStrategyFinder = incrementStrategyFinder.NotNull();
+    private readonly IGitRepository gitRepository = gitRepository.NotNull();
 
     private GitVersionContext Context => this.versionContext.Value;
 
@@ -228,7 +230,7 @@ internal class NextVersionCalculator(
 
     private bool IncludeVersion(BaseVersion baseVersion, IIgnoreConfiguration ignoreConfiguration)
     {
-        foreach (var versionFilter in ignoreConfiguration.ToFilters())
+        foreach (var versionFilter in ignoreConfiguration.ToFilters(gitRepository))
         {
             if (versionFilter.Exclude(baseVersion, out var reason))
             {

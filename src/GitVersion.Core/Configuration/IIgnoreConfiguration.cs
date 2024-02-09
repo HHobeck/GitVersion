@@ -6,6 +6,8 @@ namespace GitVersion.Configuration
 
         IReadOnlyCollection<string> Shas { get; }
 
+        IPathFilterConfiguration PathFilters { get; }
+
         public bool IsEmpty => Before == null && Shas.Count == 0;
     }
 }

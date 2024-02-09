@@ -54,7 +54,7 @@ public record EffectiveConfiguration
         PatchVersionBumpMessage = configuration.PatchVersionBumpMessage;
         NoBumpMessage = configuration.NoBumpMessage;
         CommitMessageIncrementing = branchConfiguration.CommitMessageIncrementing.Value;
-        VersionFilters = configuration.Ignore.ToFilters();
+        Ignore = configuration.Ignore;
         TracksReleaseBranches = branchConfiguration.TracksReleaseBranches ?? false;
         IsReleaseBranch = branchConfiguration.IsReleaseBranch ?? false;
         IsMainBranch = branchConfiguration.IsMainBranch ?? false;
@@ -85,7 +85,7 @@ public record EffectiveConfiguration
         string? patchVersionBumpMessage,
         string? noBumpMessage,
         CommitMessageIncrementMode commitMessageIncrementing,
-        IEnumerable<IVersionFilter> versionFilters,
+        IIgnoreConfiguration ignore,
         bool tracksReleaseBranches,
         bool isReleaseBranch,
         bool isMainBranch,
@@ -114,7 +114,7 @@ public record EffectiveConfiguration
         PatchVersionBumpMessage = patchVersionBumpMessage;
         NoBumpMessage = noBumpMessage;
         CommitMessageIncrementing = commitMessageIncrementing;
-        VersionFilters = versionFilters;
+        Ignore = ignore;
         TracksReleaseBranches = tracksReleaseBranches;
         IsReleaseBranch = isReleaseBranch;
         IsMainBranch = isMainBranch;
@@ -171,7 +171,7 @@ public record EffectiveConfiguration
 
     public CommitMessageIncrementMode CommitMessageIncrementing { get; }
 
-    public IEnumerable<IVersionFilter> VersionFilters { get; }
+    public IIgnoreConfiguration Ignore { get; }
 
     public string? CommitDateFormat { get; }
 

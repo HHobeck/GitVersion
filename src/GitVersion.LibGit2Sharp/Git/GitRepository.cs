@@ -89,7 +89,21 @@ internal sealed partial class GitRepository
         // gets all changes of the last commit vs Staging area and WT
         var changes = RepositoryInstance.Diff.Compare<TreeChanges>(RepositoryInstance.Head.Tip.Tree,
             DiffTargets.Index | DiffTargets.WorkingDirectory);
-
         return changes.Count;
+    }
+
+    public IReadOnlyList<string> GetFilePathChangesOfCommit(ICommit commit)
+    {
+        if (commit is null) throw new ArgumentNullException(nameof(commit));
+
+        var commitFromSha = commit.Parents.FirstOrDefault()?.Sha;
+        var commitToSha = commit.Sha;
+
+        var commitFrom = commitFromSha is not null ? RepositoryInstance.Commits.Single(c => c.Sha == commitFromSha) : null;
+        var commitTo = RepositoryInstance.Commits.Single(c => c.Sha == commitToSha);
+
+        using var patch = RepositoryInstance.Diff.Compare<Patch>(commitFrom?.Tree, commitTo.Tree);
+
+        return patch.Select(element => element.Path).ToList();
     }
 }

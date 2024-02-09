@@ -8,7 +8,8 @@ public static class GitTestExtensions
 {
     private static int _pad = 1;
 
-    public static Commit MakeACommit(this IRepository repository, string? commitMessage = null) => CreateFileAndCommit(repository, Guid.NewGuid().ToString(), commitMessage);
+    public static Commit MakeACommit(this IRepository repository, string? commitMessage = null, string? location = null)
+        => CreateFileAndCommit(repository, location is null ? Guid.NewGuid().ToString() : Path.Combine(location, Guid.NewGuid().ToString()), commitMessage);
 
     public static void MergeNoFF(this IRepository repository, string branch) => MergeNoFF(repository, branch, Generate.SignatureNow());
 
@@ -27,6 +28,12 @@ public static class GitTestExtensions
         if (File.Exists(randomFile))
         {
             File.Delete(randomFile);
+        }
+
+        var direcotryPath = Path.GetDirectoryName(randomFile);
+        if (direcotryPath is not null && direcotryPath != repository.Info.WorkingDirectory)
+        {
+            Directory.CreateDirectory(direcotryPath);
         }
 
         var totalWidth = 36 + (_pad++ % 10);

@@ -7,3 +7,8 @@ GitVersion.Configuration.ConfigurationException.ConfigurationException(string! m
 GitVersion.Configuration.GitVersionConfigurationModule
 GitVersion.Configuration.GitVersionConfigurationModule.GitVersionConfigurationModule() -> void
 GitVersion.Configuration.GitVersionConfigurationModule.RegisterTypes(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+GitVersion.Configuration.PathFilterConfiguration
+GitVersion.Configuration.PathFilterConfiguration.Exclude.get -> System.Collections.Generic.HashSet<string!>!
+GitVersion.Configuration.PathFilterConfiguration.Exclude.init -> void
+GitVersion.Configuration.PathFilterConfiguration.Include.get -> System.Collections.Generic.HashSet<string!>!
+GitVersion.Configuration.PathFilterConfiguration.Include.init -> void

@@ -22,4 +22,8 @@ internal record IgnoreConfiguration : IIgnoreConfiguration
     [JsonPropertyName("sha")]
     [JsonPropertyDescription("A sequence of SHAs to be excluded from the version calculations.")]
     public HashSet<string> Shas { get; init; } = new();
+
+    [JsonPropertyName("paths")]
+    [JsonPropertyDescription("A path filter to include or exclude parts of the repository.")]
+    public IPathFilterConfiguration PathFilters { get; init; } = new PathFilterConfiguration();
 }

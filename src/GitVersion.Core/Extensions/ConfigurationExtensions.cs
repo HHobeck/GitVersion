@@ -4,6 +4,113 @@ using GitVersion.VersionCalculation;
 
 namespace GitVersion.Configuration;
 
+internal class PathFilter : IVersionFilter
+{
+    //private readonly static Dictionary<string, IEnumerable<string>> patchsCache = new();
+
+    public enum PathFilterMode { Inclusive, Exclusive }
+
+    private readonly IEnumerable<string> paths;
+    private readonly PathFilterMode mode;
+    private readonly IGitRepository gitRepository;
+
+    public PathFilter(IEnumerable<string> paths, PathFilterMode mode, IGitRepository gitRepository)
+    {
+        this.paths = paths ?? throw new ArgumentNullException(nameof(paths));
+        this.mode = mode;
+        this.gitRepository = gitRepository ?? throw new ArgumentNullException(nameof(gitRepository));
+    }
+
+    //public bool Exclude(BaseVersion version, out string? reason)
+    //{
+    //    if (version == null) throw new ArgumentNullException(nameof(version));
+
+    //    reason = null;
+    //    if (version.Source.StartsWith("Fallback") || version.Source.StartsWith("Git tag") || version.Source.StartsWith("NextVersion")) return false;
+
+    //    return Exclude(version.BaseVersionSource, version.Context, out reason);
+    //}
+
+    public bool Exclude(BaseVersion version, out string? reason)
+    {
+        reason = null;
+
+        var filePathChanges = gitRepository.GetFilePathChangesOfCommit(version.BaseVersionSource!);
+        if (filePathChanges != null)
+        {
+            switch (mode)
+            {
+                case PathFilterMode.Inclusive:
+                    if (!paths.Any(path => filePathChanges.Any(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        reason = "Source was ignored due to commit path is not present";
+                        return true;
+                    }
+                    break;
+                case PathFilterMode.Exclusive:
+                    if (paths.Any(path => filePathChanges.All(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        reason = "Source was ignored due to commit path excluded";
+                        return true;
+                    }
+                    break;
+            }
+        }
+
+        return false;
+    }
+
+    internal bool Exclude(ICommit commit, GitVersionContext context, IGitRepository gitRepository, out string? reason)
+    {
+        if (commit == null) throw new ArgumentNullException(nameof(commit));
+
+        reason = null;
+
+        var match = new Regex($"^({context.Configuration.TagPrefix}).*$", RegexOptions.Compiled);
+
+        var filePathChanges = gitRepository.GetFilePathChangesOfCommit(commit);
+        //if (!patchsCache.ContainsKey(commit.Sha))
+        //{
+        //    //if (!context.Repository.Tags.Any(t => t.Target.Sha == commit.Sha && match.IsMatch(t.FriendlyName)))
+        //    //{
+        //    //    Tree commitTree = commit.Tree; // Main Tree
+        //    //    Tree parentCommitTree = commit.Parents.FirstOrDefault()?.Tree; // Secondary Tree
+        //    //    patch = context.Repository.Diff.Compare<Patch>(parentCommitTree, commitTree); // Difference
+        //    //}
+        //    //patchsCache[commit.Sha] = patch;
+
+        //    //if (!context.Repository.Tags.Any(t => t.TargetSha == commit.Sha && match.IsMatch(t.Name.Friendly)))
+        //    //    patch = context.Repository.DiffPathChanges(commit.Parents.FirstOrDefault(), commit);
+        //}
+
+        //patchsCache[commit.Sha] = gitRepository.GetFilePathChangesOfCommit(commit);
+
+        //patch = patchsCache[commit.Sha];
+        if (filePathChanges != null)
+        {
+            switch (mode)
+            {
+                case PathFilterMode.Inclusive:
+                    if (!paths.Any(path => filePathChanges.Any(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        reason = "Source was ignored due to commit path is not present";
+                        return true;
+                    }
+                    break;
+                case PathFilterMode.Exclusive:
+                    if (paths.Any(path => filePathChanges.All(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        reason = "Source was ignored due to commit path excluded";
+                        return true;
+                    }
+                    break;
+            }
+        }
+
+        return false;
+    }
+}
+
 public static class ConfigurationExtensions
 {
     public static EffectiveBranchConfiguration GetEffectiveBranchConfiguration(this IGitVersionConfiguration configuration, IBranch branch)
@@ -28,12 +135,21 @@ public static class ConfigurationExtensions
         return branchConfiguration;
     }
 
-    public static IEnumerable<IVersionFilter> ToFilters(this IIgnoreConfiguration source)
+    public static IEnumerable<IVersionFilter> ToFilters(this IIgnoreConfiguration source, IGitRepository gitRepository)
     {
         source.NotNull();
 
         if (source.Shas.Count != 0) yield return new ShaVersionFilter(source.Shas);
         if (source.Before.HasValue) yield return new MinDateVersionFilter(source.Before.Value);
+
+        if (source.PathFilters.Include.Count != 0)
+        {
+            yield return new PathFilter(source.PathFilters.Include, PathFilter.PathFilterMode.Inclusive, gitRepository);
+        }
+        if (source.PathFilters.Exclude.Count != 0)
+        {
+            yield return new PathFilter(source.PathFilters.Exclude, PathFilter.PathFilterMode.Exclusive, gitRepository);
+        }
     }
 
     private static IEnumerable<IBranchConfiguration> GetBranchConfigurations(IGitVersionConfiguration configuration, string branchName)

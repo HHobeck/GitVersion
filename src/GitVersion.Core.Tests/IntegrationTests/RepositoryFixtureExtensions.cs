@@ -4,9 +4,9 @@ namespace GitVersion.Core.Tests.IntegrationTests;
 
 internal static class RepositoryFixtureExtensions
 {
-    public static void MakeACommit(this RepositoryFixtureBase fixture, string commitMsg)
+    public static void MakeACommit(this RepositoryFixtureBase fixture, string commitMsg, string? location = null)
     {
-        fixture.Repository.MakeACommit(commitMsg);
+        fixture.Repository.MakeACommit(commitMsg, location);
         var diagramBuilder = (StringBuilder?)typeof(SequenceDiagram)
             .GetField("diagramBuilder", BindingFlags.Instance | BindingFlags.NonPublic)
             ?.GetValue(fixture.SequenceDiagram);

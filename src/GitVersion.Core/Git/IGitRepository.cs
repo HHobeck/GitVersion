@@ -16,4 +16,5 @@ public interface IGitRepository : IDisposable
     ICommit? FindMergeBase(ICommit commit, ICommit otherCommit);
     int GetNumberOfUncommittedChanges();
     void DiscoverRepository(string? gitDirectory);
+    IReadOnlyList<string> GetFilePathChangesOfCommit(ICommit commit);
 }
