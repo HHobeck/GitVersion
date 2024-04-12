@@ -56,7 +56,7 @@ internal sealed class VersionInBranchNameVersionStrategy(
 
                 var label = configuration.Value.GetBranchSpecificLabel(Context.CurrentBranch.Name, branchNameOverride);
 
-                baseVersion = new BaseVersion("Version in branch name", result.Value, commitBranchWasBranchedFrom.Value.Commit)
+                baseVersion = new BaseVersion("Version in branch name", result.Value, null) // commitBranchWasBranchedFrom.Value.Commit)
                 {
                     Operator = new BaseVersionOperator()
                     {

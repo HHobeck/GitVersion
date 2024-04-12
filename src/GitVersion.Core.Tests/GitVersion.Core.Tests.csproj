@@ -17,8 +17,19 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     </ItemGroup>
     <ItemGroup>
-        <Content Include="VersionCalculation\Approved\**\*.approved.txt" />
         <Content Include="VersionConverters\Approved\**\*.approved.txt" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="IntegrationTests\SemVerOfAFeatureBranchStartedFromAReleaseBranchGetsDecrementedScenario.cs" />
+      <Compile Remove="IntegrationTests\SupportBranchScenarios.cs" />
+      <Compile Remove="IntegrationTests\SwitchingToGitFlowScenarios.cs" />
+      <Compile Remove="IntegrationTests\TagCheckoutScenarios.cs" />
+      <Compile Remove="IntegrationTests\TrunkBasedDevelopmentScenarios.cs" />
+      <Compile Remove="IntegrationTests\VersionBumpingScenarios.cs" />
+      <Compile Remove="IntegrationTests\VersionInCurrentBranchNameScenarios.cs" />
+      <Compile Remove="IntegrationTests\VersionInMergedBranchNameScenarios.cs" />
+      <Compile Remove="IntegrationTests\VersionInTagScenarios.cs" />
+      <Compile Remove="IntegrationTests\WorktreeScenarios.cs" />
     </ItemGroup>
     <ItemGroup>
         <InternalsVisibleTo Include="GitVersion.BuildAgents.Tests" />

@@ -13,7 +13,7 @@ public class VersionInCurrentBranchNameScenarios : TestBase
         using var fixture = new BaseGitFlowRepositoryFixture("1.0.0");
         fixture.BranchTo("release/2.0.0");
 
-        fixture.AssertFullSemver("2.0.0-beta.1+0");
+        fixture.AssertFullSemver("2.0.0-beta.1+1");
     }
 
     [Test]

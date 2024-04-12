@@ -112,8 +112,39 @@ internal class RepositoryStore : IRepositoryStore
 
         var referenceLookup = this.repository.Refs.ToLookup(r => r.TargetIdentifier);
 
-        foreach (var branchGrouping in FindCommitBranchesWasBranchedFrom(branch, configuration, excludedBranches)
-            .GroupBy(element => element.Commit, element => element.Branch))
+        var commitBranches = FindCommitBranchesWasBranchedFrom(branch, configuration, excludedBranches).ToHashSet();
+
+        var exception = new HashSet<BranchCommit>();
+        foreach (var item1 in commitBranches)
+        {
+            foreach (var item2 in branch.Commits.Where(element => element.When > item1.Commit.When))
+            {
+                var parents = item2.Parents.ToArray();
+                if (parents.Length > 1 && parents.Any(element => element.Equals(item1.Commit)))
+                {
+                    exception.Add(item1);
+                }
+            }
+        }
+
+        foreach (var item1 in commitBranches.Skip(1).Reverse())
+        {
+            if (exception.Contains(item1)) continue;
+            foreach (var item2 in commitBranches)
+            {
+                if (item1.Commit.Equals(item2.Commit)) break;
+
+                foreach (var commit in item2.Branch.Commits.Where(element => element.When >= item1.Commit.When))
+                {
+                    if (commit.Equals(item1.Commit))
+                    {
+                        commitBranches.Remove(item1);
+                    }
+                }
+            }
+        }
+
+        foreach (var branchGrouping in commitBranches.GroupBy(element => element.Commit, element => element.Branch))
         {
             bool referenceMatchFound = false;
             var referenceNames = referenceLookup[branchGrouping.Key.Sha].Select(element => element.Name).ToHashSet();
@@ -183,14 +214,14 @@ internal class RepositoryStore : IRepositoryStore
                 yield break;
             }
 
-            DateTimeOffset? when = null;
+            //DateTimeOffset? when = null;
             var branchCommits = new MergeCommitFinder(this, configuration, excludedBranches, this.log)
                 .FindMergeCommitsFor(branch).ToList();
             foreach (var branchCommit in branchCommits)
             {
-                if (when != null && branchCommit.Commit.When != when) break;
+                //if (when != null && branchCommit.Commit.When != when) break;
                 yield return branchCommit;
-                when = branchCommit.Commit.When;
+                //when = branchCommit.Commit.When;
             }
         }
     }
